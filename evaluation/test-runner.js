@@ -17,6 +17,7 @@ const CONFIG = {
     apiEndpoint: process.env.AI_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions',
     apiKey: process.env.AI_API_KEY || 'your-api-key-here',
     model: process.env.AI_MODEL || 'gpt-3.5-turbo',
+    temperature: parseFloat(process.env.AI_TEMPERATURE) || 0.7,
     maxRetries: 3,
     retryDelay: 1000
 };
@@ -61,6 +62,7 @@ async function askAI(question) {
         model: CONFIG.model,
         messages: messages,
         max_tokens: 150,
+        temperature: CONFIG.temperature
         temperature: 0.1
     };
 
@@ -125,6 +127,7 @@ Please respond with only the JSON result:`;
         model: CONFIG.model,
         messages: messages,
         max_tokens: 200,
+        temperature: CONFIG.temperature
         temperature: 0.1
     };
 
@@ -260,6 +263,9 @@ async function runTests() {
         console.log('⚠️  Warning: Using default API key. Set AI_API_KEY environment variable for production use.');
     }
     
+  
+    // Log configuration
+    console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
     const results = [];
     
     // Run tests sequentially

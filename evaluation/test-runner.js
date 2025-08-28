@@ -54,6 +54,7 @@ function loadJudgePrompt() {
  * Send a question to the AI API
  */
 async function askAI(question, customStopSequence = null) {
+async function askAI(question) {
     const messages = [
         {
             role: "user",
@@ -75,6 +76,11 @@ async function askAI(question, customStopSequence = null) {
     if (stopSeq) {
         requestBody.stop = [stopSeq];
     }
+
+        top_p: CONFIG.topP
+        temperature: CONFIG.temperature
+        temperature: 0.1
+    };
 
     try {
         const response = await fetch(CONFIG.apiEndpoint, {
@@ -110,6 +116,7 @@ async function askAI(question, customStopSequence = null) {
  * Evaluate AI response using the judge prompt
  */
 async function evaluateResponse(question, aiAnswer, expectedAnswer, customStopSequence = null) {
+async function evaluateResponse(question, aiAnswer, expectedAnswer) {
     const judgePrompt = loadJudgePrompt();
     
     const evaluationPrompt = `${judgePrompt}
@@ -147,6 +154,11 @@ Please respond with only the JSON result:`;
     if (stopSeq) {
         requestBody.stop = [stopSeq];
     }
+
+        top_p: CONFIG.topP
+        temperature: CONFIG.temperature
+        temperature: 0.1
+    };
 
     try {
         const response = await fetch(CONFIG.apiEndpoint, {
@@ -201,6 +213,7 @@ Please respond with only the JSON result:`;
  * Run a single test case
  */
 async function runTest(testCase, index, customStopSequence = null) {
+async function runTest(testCase, index) {
     console.log(`\n🧪 Running Test ${index + 1}/${testCase.length}`);
     console.log(`Question: ${testCase.question}`);
     console.log(`Expected: ${testCase.expected}`);
@@ -212,6 +225,9 @@ async function runTest(testCase, index, customStopSequence = null) {
     // Ask AI
     console.log('🤖 Asking AI...');
     const aiAnswer = await askAI(testCase.question, customStopSequence);
+    // Ask AI
+    console.log('🤖 Asking AI...');
+    const aiAnswer = await askAI(testCase.question);
     
     if (!aiAnswer) {
         console.log('❌ Failed to get AI response');
@@ -228,6 +244,7 @@ async function runTest(testCase, index, customStopSequence = null) {
     // Evaluate response
     console.log('⚖️  Evaluating response...');
     const evaluation = await evaluateResponse(testCase.question, aiAnswer, testCase.expected, customStopSequence);
+    const evaluation = await evaluateResponse(testCase.question, aiAnswer, testCase.expected);
     
     console.log(`Result: ${evaluation.result.toUpperCase()}`);
     return evaluation;
@@ -271,6 +288,7 @@ function displayResults(results) {
  * Main test runner function
  */
 async function runTests(customStopSequence = null) {
+async function runTests() {
     console.log('🚀 Starting NoteWise AI Evaluation Tests');
     console.log('='.repeat(60));
     
@@ -290,12 +308,22 @@ async function runTests(customStopSequence = null) {
     console.log(`🔝 Top-K: ${CONFIG.topK}`);
     console.log(`🛑 Stop Sequence: "${customStopSequence || CONFIG.stopSequence}"`);
     
+    
+
+    // Log configuration
+    console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
+    console.log(`🎯 Top-P: ${CONFIG.topP}`);
+    
+  
+    // Log configuration
+    console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
     const results = [];
     
     // Run tests sequentially
     for (let i = 0; i < dataset.length; i++) {
         const testCase = dataset[i];
         const result = await runTest(testCase, i, customStopSequence);
+        const result = await runTest(testCase, i);
         results.push(result);
         
         // Add delay between requests to avoid rate limiting
@@ -342,6 +370,7 @@ if (require.main === module) {
     const customStopSequence = process.argv[2] || null;
     
     runTests(customStopSequence).catch(error => {
+    runTests().catch(error => {
         console.error('❌ Fatal error:', error.message);
         process.exit(1);
     });

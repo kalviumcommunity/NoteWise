@@ -20,6 +20,7 @@ const CONFIG = {
     temperature: parseFloat(process.env.AI_TEMPERATURE) || 0.7,
     topP: parseFloat(process.env.AI_TOP_P) || 0.9,
     topK: parseInt(process.env.AI_TOP_K) || 50,
+    stopSequence: process.env.AI_STOP_SEQUENCE || "###",
     maxRetries: 3,
     retryDelay: 1000
 };
@@ -52,6 +53,7 @@ function loadJudgePrompt() {
 /**
  * Send a question to the AI API
  */
+async function askAI(question, customStopSequence = null) {
 async function askAI(question) {
     const messages = [
         {
@@ -67,6 +69,14 @@ async function askAI(question) {
         temperature: CONFIG.temperature,
         top_p: CONFIG.topP,
         top_k: CONFIG.topK
+    };
+
+    // Add stop sequence if provided (either custom or default)
+    const stopSeq = customStopSequence || CONFIG.stopSequence;
+    if (stopSeq) {
+        requestBody.stop = [stopSeq];
+    }
+
         top_p: CONFIG.topP
         temperature: CONFIG.temperature
         temperature: 0.1
@@ -105,6 +115,7 @@ async function askAI(question) {
 /**
  * Evaluate AI response using the judge prompt
  */
+async function evaluateResponse(question, aiAnswer, expectedAnswer, customStopSequence = null) {
 async function evaluateResponse(question, aiAnswer, expectedAnswer) {
     const judgePrompt = loadJudgePrompt();
     
@@ -136,6 +147,14 @@ Please respond with only the JSON result:`;
         temperature: CONFIG.temperature,
         top_p: CONFIG.topP,
         top_k: CONFIG.topK
+    };
+
+    // Add stop sequence if provided (either custom or default)
+    const stopSeq = customStopSequence || CONFIG.stopSequence;
+    if (stopSeq) {
+        requestBody.stop = [stopSeq];
+    }
+
         top_p: CONFIG.topP
         temperature: CONFIG.temperature
         temperature: 0.1
@@ -193,11 +212,19 @@ Please respond with only the JSON result:`;
 /**
  * Run a single test case
  */
+async function runTest(testCase, index, customStopSequence = null) {
 async function runTest(testCase, index) {
     console.log(`\n🧪 Running Test ${index + 1}/${testCase.length}`);
     console.log(`Question: ${testCase.question}`);
     console.log(`Expected: ${testCase.expected}`);
     
+    if (customStopSequence) {
+        console.log(`🛑 Custom Stop Sequence: "${customStopSequence}"`);
+    }
+    
+    // Ask AI
+    console.log('🤖 Asking AI...');
+    const aiAnswer = await askAI(testCase.question, customStopSequence);
     // Ask AI
     console.log('🤖 Asking AI...');
     const aiAnswer = await askAI(testCase.question);
@@ -216,6 +243,7 @@ async function runTest(testCase, index) {
     
     // Evaluate response
     console.log('⚖️  Evaluating response...');
+    const evaluation = await evaluateResponse(testCase.question, aiAnswer, testCase.expected, customStopSequence);
     const evaluation = await evaluateResponse(testCase.question, aiAnswer, testCase.expected);
     
     console.log(`Result: ${evaluation.result.toUpperCase()}`);
@@ -259,6 +287,7 @@ function displayResults(results) {
 /**
  * Main test runner function
  */
+async function runTests(customStopSequence = null) {
 async function runTests() {
     console.log('🚀 Starting NoteWise AI Evaluation Tests');
     console.log('='.repeat(60));
@@ -277,6 +306,8 @@ async function runTests() {
     console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
     console.log(`🎯 Top-P: ${CONFIG.topP}`);
     console.log(`🔝 Top-K: ${CONFIG.topK}`);
+    console.log(`🛑 Stop Sequence: "${customStopSequence || CONFIG.stopSequence}"`);
+    
     
 
     // Log configuration
@@ -291,6 +322,7 @@ async function runTests() {
     // Run tests sequentially
     for (let i = 0; i < dataset.length; i++) {
         const testCase = dataset[i];
+        const result = await runTest(testCase, i, customStopSequence);
         const result = await runTest(testCase, i);
         results.push(result);
         
@@ -334,6 +366,10 @@ if (require.main === module) {
         process.exit(1);
     }
     
+    // Check for custom stop sequence from command line arguments
+    const customStopSequence = process.argv[2] || null;
+    
+    runTests(customStopSequence).catch(error => {
     runTests().catch(error => {
         console.error('❌ Fatal error:', error.message);
         process.exit(1);

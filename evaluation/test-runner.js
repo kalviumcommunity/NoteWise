@@ -63,6 +63,7 @@ async function askAI(question) {
         messages: messages,
         max_tokens: 150,
         temperature: CONFIG.temperature
+        temperature: 0.1
     };
 
     try {
@@ -127,6 +128,7 @@ Please respond with only the JSON result:`;
         messages: messages,
         max_tokens: 200,
         temperature: CONFIG.temperature
+        temperature: 0.1
     };
 
     try {
@@ -261,9 +263,9 @@ async function runTests() {
         console.log('⚠️  Warning: Using default API key. Set AI_API_KEY environment variable for production use.');
     }
     
+  
     // Log configuration
     console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
-    
     const results = [];
     
     // Run tests sequentially

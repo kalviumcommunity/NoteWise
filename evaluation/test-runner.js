@@ -21,6 +21,7 @@ const CONFIG = {
     topP: parseFloat(process.env.AI_TOP_P) || 0.9,
     topK: parseInt(process.env.AI_TOP_K) || 50,
     stopSequence: process.env.AI_STOP_SEQUENCE || "###",
+    useStructuredOutput: process.env.AI_USE_STRUCTURED_OUTPUT === 'true' || false,
     maxRetries: 3,
     retryDelay: 1000
 };
@@ -77,6 +78,18 @@ async function askAI(question) {
         requestBody.stop = [stopSeq];
     }
 
+    // Add structured output if enabled
+    if (CONFIG.useStructuredOutput) {
+        requestBody.response_format = { type: "json_object" };
+        requestBody.messages[0].content = `${question}
+
+Please respond with a JSON object in the following format:
+{
+  "answer": "your answer here",
+  "source": "where you got this information from",
+  "confidence": 0.95
+}`;
+    }
         top_p: CONFIG.topP
         temperature: CONFIG.temperature
         temperature: 0.1
@@ -105,6 +118,21 @@ async function askAI(question) {
             console.log(`📊 Token Usage: Not available in response`);
         }
         
+        const responseContent = data.choices[0].message.content.trim();
+        
+        // Handle structured output
+        if (CONFIG.useStructuredOutput) {
+            try {
+                const structuredResponse = JSON.parse(responseContent);
+                console.log(`📋 Structured Response:`, structuredResponse);
+                return structuredResponse.answer || responseContent;
+            } catch (parseError) {
+                console.warn(`⚠️  Could not parse structured response as JSON: ${responseContent}`);
+                return responseContent;
+            }
+        }
+        
+        return responseContent;
         return data.choices[0].message.content.trim();
     } catch (error) {
         console.error(`❌ Error asking AI: ${error.message}`);
@@ -155,6 +183,19 @@ Please respond with only the JSON result:`;
         requestBody.stop = [stopSeq];
     }
 
+    // Add structured output for judge if enabled
+    if (CONFIG.useStructuredOutput) {
+        requestBody.response_format = { type: "json_object" };
+        requestBody.messages[1].content = `${evaluationPrompt}
+
+Please respond with a JSON object in the following format:
+{
+  "question": "the original question",
+  "answer": "the AI model's response",
+  "expected": "the expected correct answer",
+  "result": "correct or incorrect"
+}`;
+    }
         top_p: CONFIG.topP
         temperature: CONFIG.temperature
         temperature: 0.1
@@ -187,6 +228,19 @@ Please respond with only the JSON result:`;
         
         // Try to parse JSON response
         try {
+            const parsedResponse = JSON.parse(judgeResponse);
+            
+            // Handle structured output from judge
+            if (CONFIG.useStructuredOutput && parsedResponse.result) {
+                return {
+                    question: parsedResponse.question || question,
+                    answer: parsedResponse.answer || aiAnswer,
+                    expected: parsedResponse.expected || expectedAnswer,
+                    result: parsedResponse.result
+                };
+            }
+            
+            return parsedResponse;
             return JSON.parse(judgeResponse);
         } catch (parseError) {
             console.warn(`⚠️  Could not parse judge response as JSON: ${judgeResponse}`);
@@ -222,6 +276,13 @@ async function runTest(testCase, index) {
         console.log(`🛑 Custom Stop Sequence: "${customStopSequence}"`);
     }
     
+    if (CONFIG.useStructuredOutput) {
+        console.log(`📋 Using Structured Output`);
+    }
+    
+    // Ask AI
+    console.log('🤖 Asking AI...');
+    const aiAnswer = await askAI(testCase.question, customStopSequence);
     // Ask AI
     console.log('🤖 Asking AI...');
     const aiAnswer = await askAI(testCase.question, customStopSequence);
@@ -307,6 +368,10 @@ async function runTests() {
     console.log(`🎯 Top-P: ${CONFIG.topP}`);
     console.log(`🔝 Top-K: ${CONFIG.topK}`);
     console.log(`🛑 Stop Sequence: "${customStopSequence || CONFIG.stopSequence}"`);
+
+    console.log(`📋 Structured Output: ${CONFIG.useStructuredOutput ? 'Enabled' : 'Disabled'}`);
+    
+
     
     
 

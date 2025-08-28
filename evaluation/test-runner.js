@@ -67,6 +67,9 @@ async function askAI(question) {
         temperature: CONFIG.temperature,
         top_p: CONFIG.topP,
         top_k: CONFIG.topK
+        top_p: CONFIG.topP
+        temperature: CONFIG.temperature
+        temperature: 0.1
     };
 
     try {
@@ -133,6 +136,9 @@ Please respond with only the JSON result:`;
         temperature: CONFIG.temperature,
         top_p: CONFIG.topP,
         top_k: CONFIG.topK
+        top_p: CONFIG.topP
+        temperature: CONFIG.temperature
+        temperature: 0.1
     };
 
     try {
@@ -272,6 +278,14 @@ async function runTests() {
     console.log(`🎯 Top-P: ${CONFIG.topP}`);
     console.log(`🔝 Top-K: ${CONFIG.topK}`);
     
+
+    // Log configuration
+    console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
+    console.log(`🎯 Top-P: ${CONFIG.topP}`);
+    
+  
+    // Log configuration
+    console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
     const results = [];
     
     // Run tests sequentially

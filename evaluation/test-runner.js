@@ -65,6 +65,8 @@ async function askAI(question) {
         max_tokens: 150,
         temperature: CONFIG.temperature,
         top_p: CONFIG.topP
+        temperature: CONFIG.temperature
+        temperature: 0.1
     };
 
     try {
@@ -130,6 +132,8 @@ Please respond with only the JSON result:`;
         max_tokens: 200,
         temperature: CONFIG.temperature,
         top_p: CONFIG.topP
+        temperature: CONFIG.temperature
+        temperature: 0.1
     };
 
     try {
@@ -264,10 +268,14 @@ async function runTests() {
         console.log('⚠️  Warning: Using default API key. Set AI_API_KEY environment variable for production use.');
     }
     
+
     // Log configuration
     console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
     console.log(`🎯 Top-P: ${CONFIG.topP}`);
     
+  
+    // Log configuration
+    console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
     const results = [];
     
     // Run tests sequentially

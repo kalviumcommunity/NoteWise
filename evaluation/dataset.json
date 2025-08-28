@@ -1,0 +1,7 @@
+[
+  { "question": "What is the capital of France?", "expected": "Paris" },
+  { "question": "What is 2+2?", "expected": "4" },
+  { "question": "Who wrote Hamlet?", "expected": "William Shakespeare" },
+  { "question": "What is the boiling point of water?", "expected": "100°C" },
+  { "question": "When did World War II end?", "expected": "1945" }
+]

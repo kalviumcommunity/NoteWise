@@ -19,6 +19,7 @@ const CONFIG = {
     model: process.env.AI_MODEL || 'gpt-3.5-turbo',
     temperature: parseFloat(process.env.AI_TEMPERATURE) || 0.7,
     topP: parseFloat(process.env.AI_TOP_P) || 0.9,
+    topK: parseInt(process.env.AI_TOP_K) || 50,
     maxRetries: 3,
     retryDelay: 1000
 };
@@ -64,6 +65,8 @@ async function askAI(question) {
         messages: messages,
         max_tokens: 150,
         temperature: CONFIG.temperature,
+        top_p: CONFIG.topP,
+        top_k: CONFIG.topK
         top_p: CONFIG.topP
         temperature: CONFIG.temperature
         temperature: 0.1
@@ -131,6 +134,8 @@ Please respond with only the JSON result:`;
         messages: messages,
         max_tokens: 200,
         temperature: CONFIG.temperature,
+        top_p: CONFIG.topP,
+        top_k: CONFIG.topK
         top_p: CONFIG.topP
         temperature: CONFIG.temperature
         temperature: 0.1
@@ -267,6 +272,11 @@ async function runTests() {
     if (CONFIG.apiKey === 'your-api-key-here') {
         console.log('⚠️  Warning: Using default API key. Set AI_API_KEY environment variable for production use.');
     }
+    
+    // Log configuration
+    console.log(`🌡️  Temperature: ${CONFIG.temperature}`);
+    console.log(`🎯 Top-P: ${CONFIG.topP}`);
+    console.log(`🔝 Top-K: ${CONFIG.topK}`);
     
 
     // Log configuration
